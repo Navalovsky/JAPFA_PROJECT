@@ -1,0 +1,33 @@
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model wtp_logs {
+  id           Int      @id @default(autoincrement())
+  debit_inlet  Float
+  debit_outlet Float
+  created_at   DateTime @default(now())
+}
+
+model wwtp_logs {
+  id           Int      @id @default(autoincrement())
+  cod          Float
+  bod          Float
+  debit_inlet  Float
+  debit_outlet Float
+  nh3_n        Float
+  ph           Float
+  created_at   DateTime @default(now())
+}
+
+model users {
+  id       Int    @id @default(autoincrement())
+  username String @unique
+  password String
+  role     String // Isinya nanti: "admin" atau "engineer"
+}
