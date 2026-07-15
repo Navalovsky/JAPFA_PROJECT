@@ -26,9 +26,24 @@ const THRESHOLD = {
 export default function App() {
   // Auth States
   const [user, setUser] = useState<{ username: string; role: string } | null>(null);
+  const [checkingSession, setCheckingSession] = useState(true);
   const [usernameInput, setUsernameInput] = useState('');
   const [passwordInput, setPasswordInput] = useState('');
   const [loginError, setLoginError] = useState('');
+
+  // Pulihkan sesi login dari localStorage saat aplikasi pertama kali dibuka / di-refresh
+  useEffect(() => {
+    try {
+      const savedUser = localStorage.getItem('japfa_user');
+      if (savedUser) {
+        setUser(JSON.parse(savedUser));
+      }
+    } catch (err) {
+      // localStorage tidak tersedia atau datanya rusak, abaikan saja
+    } finally {
+      setCheckingSession(false);
+    }
+  }, []);
 
   // Navigation State
   const [activeMenu, setActiveMenu] = useState<'dashboard' | 'input-mingguan' | 'view-mingguan'>('dashboard');
@@ -83,10 +98,12 @@ export default function App() {
       });
       const resData = await res.json();
       if (res.ok) {
-        setUser({
+        const loggedInUser = {
           username: resData.user.username,
           role: resData.user.role.toLowerCase()
-        });
+        };
+        setUser(loggedInUser);
+        localStorage.setItem('japfa_user', JSON.stringify(loggedInUser));
         setActiveMenu('dashboard');
       } else {
         setLoginError(resData.error || 'Login gagal');
@@ -101,6 +118,7 @@ export default function App() {
     if (chartWwtpInstance.current) { chartWwtpInstance.current.destroy(); chartWwtpInstance.current = null; }
     setUser(null);
     setData(null);
+    localStorage.removeItem('japfa_user');
   };
 
   const renderCharts = (jsonData: any) => {
@@ -276,6 +294,14 @@ export default function App() {
 
     return formattedItemDate === searchDateWwtp;
   });
+
+  if (checkingSession) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', backgroundColor: '#f1f3f5' }}>
+        <p style={{ color: '#6c757d', fontFamily: 'sans-serif' }}>Memuat...</p>
+      </div>
+    );
+  }
 
   if (!user) {
     return (
