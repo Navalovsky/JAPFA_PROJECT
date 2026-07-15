@@ -32,11 +32,17 @@ export default function App() {
   const [loginError, setLoginError] = useState('');
 
   // Pulihkan sesi login dari localStorage saat aplikasi pertama kali dibuka / di-refresh
+  const [activeMenu, setActiveMenu] = useState<'dashboard' | 'input-mingguan' | 'view-mingguan'>('dashboard');
+
   useEffect(() => {
     try {
       const savedUser = localStorage.getItem('japfa_user');
       if (savedUser) {
         setUser(JSON.parse(savedUser));
+      }
+      const savedMenu = localStorage.getItem('japfa_active_menu');
+      if (savedMenu === 'dashboard' || savedMenu === 'input-mingguan' || savedMenu === 'view-mingguan') {
+        setActiveMenu(savedMenu);
       }
     } catch (err) {
       // localStorage tidak tersedia atau datanya rusak, abaikan saja
@@ -45,8 +51,14 @@ export default function App() {
     }
   }, []);
 
-  // Navigation State
-  const [activeMenu, setActiveMenu] = useState<'dashboard' | 'input-mingguan' | 'view-mingguan'>('dashboard');
+  // Simpan tab aktif setiap kali berpindah, supaya tetap di tab yang sama saat di-refresh
+  useEffect(() => {
+    try {
+      localStorage.setItem('japfa_active_menu', activeMenu);
+    } catch (err) {
+      // abaikan jika localStorage tidak tersedia
+    }
+  }, [activeMenu]);
 
   // Responsive / Mobile Sidebar State
   const [isMobile, setIsMobile] = useState(false);
@@ -118,7 +130,9 @@ export default function App() {
     if (chartWwtpInstance.current) { chartWwtpInstance.current.destroy(); chartWwtpInstance.current = null; }
     setUser(null);
     setData(null);
+    setActiveMenu('dashboard');
     localStorage.removeItem('japfa_user');
+    localStorage.removeItem('japfa_active_menu');
   };
 
   const renderCharts = (jsonData: any) => {
