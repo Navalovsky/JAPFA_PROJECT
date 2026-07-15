@@ -31,21 +31,29 @@ export default function App() {
   const [passwordInput, setPasswordInput] = useState('');
   const [loginError, setLoginError] = useState('');
 
-  // Pulihkan sesi login dari localStorage saat aplikasi pertama kali dibuka / di-refresh
+  // Register States
+  const [authView, setAuthView] = useState<'login' | 'register'>('login');
+  const [regUsername, setRegUsername] = useState('');
+  const [regPassword, setRegPassword] = useState('');
+  const [regConfirmPassword, setRegConfirmPassword] = useState('');
+  const [registerError, setRegisterError] = useState('');
+  const [registerSuccess, setRegisterSuccess] = useState('');
+
+  // Pulihkan sesi login dari sessionStorage saat aplikasi pertama kali dibuka / di-refresh
   const [activeMenu, setActiveMenu] = useState<'dashboard' | 'input-mingguan' | 'view-mingguan'>('dashboard');
 
   useEffect(() => {
     try {
-      const savedUser = localStorage.getItem('japfa_user');
+      const savedUser = sessionStorage.getItem('japfa_user');
       if (savedUser) {
         setUser(JSON.parse(savedUser));
       }
-      const savedMenu = localStorage.getItem('japfa_active_menu');
+      const savedMenu = sessionStorage.getItem('japfa_active_menu');
       if (savedMenu === 'dashboard' || savedMenu === 'input-mingguan' || savedMenu === 'view-mingguan') {
         setActiveMenu(savedMenu);
       }
     } catch (err) {
-      // localStorage tidak tersedia atau datanya rusak, abaikan saja
+      // sessionStorage tidak tersedia atau datanya rusak, abaikan saja
     } finally {
       setCheckingSession(false);
     }
@@ -54,9 +62,9 @@ export default function App() {
   // Simpan tab aktif setiap kali berpindah, supaya tetap di tab yang sama saat di-refresh
   useEffect(() => {
     try {
-      localStorage.setItem('japfa_active_menu', activeMenu);
+      sessionStorage.setItem('japfa_active_menu', activeMenu);
     } catch (err) {
-      // abaikan jika localStorage tidak tersedia
+      // abaikan jika sessionStorage tidak tersedia
     }
   }, [activeMenu]);
 
@@ -115,7 +123,7 @@ export default function App() {
           role: resData.user.role.toLowerCase()
         };
         setUser(loggedInUser);
-        localStorage.setItem('japfa_user', JSON.stringify(loggedInUser));
+        sessionStorage.setItem('japfa_user', JSON.stringify(loggedInUser));
         setActiveMenu('dashboard');
       } else {
         setLoginError(resData.error || 'Login gagal');
@@ -125,14 +133,48 @@ export default function App() {
     }
   };
 
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setRegisterError('');
+    setRegisterSuccess('');
+
+    if (regPassword !== regConfirmPassword) {
+      setRegisterError('Konfirmasi password tidak cocok');
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: regUsername, password: regPassword, role: 'engineer' })
+      });
+      const resData = await res.json();
+      if (res.ok) {
+        setRegisterSuccess('Akun berhasil dibuat! Silakan login.');
+        setRegUsername('');
+        setRegPassword('');
+        setRegConfirmPassword('');
+        setTimeout(() => {
+          setAuthView('login');
+          setRegisterSuccess('');
+        }, 1500);
+      } else {
+        setRegisterError(resData.error || 'Registrasi gagal');
+      }
+    } catch (err) {
+      setRegisterError('Koneksi gagal');
+    }
+  };
+
   const handleLogout = () => {
     if (chartWtpInstance.current) { chartWtpInstance.current.destroy(); chartWtpInstance.current = null; }
     if (chartWwtpInstance.current) { chartWwtpInstance.current.destroy(); chartWwtpInstance.current = null; }
     setUser(null);
     setData(null);
     setActiveMenu('dashboard');
-    localStorage.removeItem('japfa_user');
-    localStorage.removeItem('japfa_active_menu');
+    sessionStorage.removeItem('japfa_user');
+    sessionStorage.removeItem('japfa_active_menu');
   };
 
   const renderCharts = (jsonData: any) => {
@@ -223,7 +265,9 @@ export default function App() {
 
   const handleInputSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const payload = activeForm === 'wtp' ? { type: 'wtp', data: wtpForm } : { type: 'wwtp', data: wwtpForm };
+    const payload = activeForm === 'wtp'
+      ? { type: 'wtp', data: wtpForm, uploaded_by: user?.username }
+      : { type: 'wwtp', data: wwtpForm, uploaded_by: user?.username };
     try {
       const res = await fetch('/api/utility/input', {
         method: 'POST',
@@ -320,19 +364,58 @@ export default function App() {
   if (!user) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', backgroundColor: '#f1f3f5', fontFamily: 'sans-serif' }}>
-        <form onSubmit={handleLogin} style={{ backgroundColor: '#fff', padding: '32px', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', width: '320px' }}>
-          <h3 style={{ textAlign: 'center', color: '#0d6efd', marginBottom: '20px' }}>JAPFA UTILITY LOGIN</h3>
-          {loginError && <p style={{ color: 'red', fontSize: '14px', textAlign: 'center' }}>{loginError}</p>}
-          <div style={{ marginBottom: '16px' }}>
-            <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px' }}>Username</label>
-            <input type="text" value={usernameInput} onChange={(e) => setUsernameInput(e.target.value)} required style={{ width: '100%', padding: '8px', boxSizing: 'border-box', borderRadius: '4px', border: '1px solid #ccc' }} />
-          </div>
-          <div style={{ marginBottom: '20px' }}>
-            <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px' }}>Password</label>
-            <input type="password" value={passwordInput} onChange={(e) => setPasswordInput(e.target.value)} required style={{ width: '100%', padding: '8px', boxSizing: 'border-box', borderRadius: '4px', border: '1px solid #ccc' }} />
-          </div>
-          <button type="submit" style={{ width: '100%', padding: '10px', backgroundColor: '#0d6efd', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>MASUK</button>
-        </form>
+        {authView === 'login' ? (
+          <form onSubmit={handleLogin} style={{ backgroundColor: '#fff', padding: '32px', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', width: '320px' }}>
+            <h3 style={{ textAlign: 'center', color: '#0d6efd', marginBottom: '20px' }}>JAPFA UTILITY LOGIN</h3>
+            {loginError && <p style={{ color: 'red', fontSize: '14px', textAlign: 'center' }}>{loginError}</p>}
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px' }}>Username</label>
+              <input type="text" value={usernameInput} onChange={(e) => setUsernameInput(e.target.value)} required style={{ width: '100%', padding: '8px', boxSizing: 'border-box', borderRadius: '4px', border: '1px solid #ccc' }} />
+            </div>
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px' }}>Password</label>
+              <input type="password" value={passwordInput} onChange={(e) => setPasswordInput(e.target.value)} required style={{ width: '100%', padding: '8px', boxSizing: 'border-box', borderRadius: '4px', border: '1px solid #ccc' }} />
+            </div>
+            <button type="submit" style={{ width: '100%', padding: '10px', backgroundColor: '#0d6efd', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>MASUK</button>
+            <p style={{ textAlign: 'center', fontSize: '13px', marginTop: '16px', marginBottom: 0 }}>
+              Belum punya akun?{' '}
+              <span
+                onClick={() => { setAuthView('register'); setLoginError(''); }}
+                style={{ color: '#0d6efd', cursor: 'pointer', fontWeight: 'bold' }}
+              >
+                Daftar di sini
+              </span>
+            </p>
+          </form>
+        ) : (
+          <form onSubmit={handleRegister} style={{ backgroundColor: '#fff', padding: '32px', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', width: '320px' }}>
+            <h3 style={{ textAlign: 'center', color: '#0d6efd', marginBottom: '20px' }}>DAFTAR AKUN BARU</h3>
+            {registerError && <p style={{ color: 'red', fontSize: '14px', textAlign: 'center' }}>{registerError}</p>}
+            {registerSuccess && <p style={{ color: '#198754', fontSize: '14px', textAlign: 'center' }}>{registerSuccess}</p>}
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px' }}>Username</label>
+              <input type="text" value={regUsername} onChange={(e) => setRegUsername(e.target.value)} required style={{ width: '100%', padding: '8px', boxSizing: 'border-box', borderRadius: '4px', border: '1px solid #ccc' }} />
+            </div>
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px' }}>Password</label>
+              <input type="password" value={regPassword} onChange={(e) => setRegPassword(e.target.value)} required style={{ width: '100%', padding: '8px', boxSizing: 'border-box', borderRadius: '4px', border: '1px solid #ccc' }} />
+            </div>
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ display: 'block', marginBottom: '6px', fontSize: '14px' }}>Konfirmasi Password</label>
+              <input type="password" value={regConfirmPassword} onChange={(e) => setRegConfirmPassword(e.target.value)} required style={{ width: '100%', padding: '8px', boxSizing: 'border-box', borderRadius: '4px', border: '1px solid #ccc' }} />
+            </div>
+            <button type="submit" style={{ width: '100%', padding: '10px', backgroundColor: '#0d6efd', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>DAFTAR</button>
+            <p style={{ textAlign: 'center', fontSize: '13px', marginTop: '16px', marginBottom: 0 }}>
+              Sudah punya akun?{' '}
+              <span
+                onClick={() => { setAuthView('login'); setRegisterError(''); }}
+                style={{ color: '#0d6efd', cursor: 'pointer', fontWeight: 'bold' }}
+              >
+                Login di sini
+              </span>
+            </p>
+          </form>
+        )}
       </div>
     );
   }
@@ -347,7 +430,13 @@ export default function App() {
             <Menu size={24} />
           </button>
           <span style={{ color: '#0d6efd', fontWeight: 'bold' }}>JAPFA UTILITY</span>
-          <div style={{ width: '24px' }} /> {/* spacer biar judul center */}
+          <div style={{
+            width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#0d6efd',
+            color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontWeight: 'bold', fontSize: '13px', flexShrink: 0
+          }}>
+            {user.username.charAt(0).toUpperCase()}
+          </div>
         </div>
       )}
 
@@ -383,9 +472,25 @@ export default function App() {
             </button>
           )}
           <h3 style={{ color: '#0d6efd', margin: '0 0 8px 0', fontWeight: 'bold', textAlign: 'center' }}>JAPFA UTILITY</h3>
-          <p style={{ fontSize: '12px', color: '#a6a6a6', textAlign: 'center', borderBottom: '1px solid #3c4145', paddingBottom: '16px', marginBottom: '20px' }}>
-            {user.username.toUpperCase()} ({user.role.toUpperCase()})
-          </p>
+
+          {/* PROFIL USER YANG SEDANG LOGIN */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '12px', backgroundColor: '#2a2f34', borderRadius: '8px', marginBottom: '20px' }}>
+            <div style={{
+              width: '40px', height: '40px', borderRadius: '50%', backgroundColor: '#0d6efd',
+              color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontWeight: 'bold', fontSize: '16px', flexShrink: 0
+            }}>
+              {user.username.charAt(0).toUpperCase()}
+            </div>
+            <div style={{ minWidth: 0 }}>
+              <p style={{ margin: 0, color: '#fff', fontWeight: 'bold', fontSize: '14px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {user.username}
+              </p>
+              <p style={{ margin: 0, color: '#a6a6a6', fontSize: '12px' }}>
+                {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+              </p>
+            </div>
+          </div>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <button onClick={() => handleMenuSelect('dashboard')} style={{ padding: '12px', textAlign: 'left', backgroundColor: activeMenu === 'dashboard' ? '#0d6efd' : 'transparent', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -554,6 +659,7 @@ export default function App() {
                       <th style={{ padding: '12px', whiteSpace: 'nowrap', position: 'sticky', top: 0, backgroundColor: '#f8f9fa', borderBottom: '2px solid #dee2e6', zIndex: 1 }}>Waktu Log</th>
                       <th style={{ padding: '12px', whiteSpace: 'nowrap', position: 'sticky', top: 0, backgroundColor: '#f8f9fa', borderBottom: '2px solid #dee2e6', zIndex: 1 }}>Debit Inlet (m³/h)</th>
                       <th style={{ padding: '12px', whiteSpace: 'nowrap', position: 'sticky', top: 0, backgroundColor: '#f8f9fa', borderBottom: '2px solid #dee2e6', zIndex: 1 }}>Debit Outlet (m³/h)</th>
+                      <th style={{ padding: '12px', whiteSpace: 'nowrap', position: 'sticky', top: 0, backgroundColor: '#f8f9fa', borderBottom: '2px solid #dee2e6', zIndex: 1 }}>Diupload Oleh</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -569,12 +675,13 @@ export default function App() {
                             </td>
                             <td style={{ padding: '12px', whiteSpace: 'nowrap', color: isWtpInletAlert ? 'red' : 'inherit', fontWeight: isWtpInletAlert ? 'bold' : 'normal' }}>{item.debit_inlet}</td>
                             <td style={{ padding: '12px', whiteSpace: 'nowrap', color: isWtpOutletAlert ? 'red' : 'inherit', fontWeight: isWtpOutletAlert ? 'bold' : 'normal' }}>{item.debit_outlet}</td>
+                            <td style={{ padding: '12px', whiteSpace: 'nowrap', color: '#6c757d' }}>{item.uploaded_by || '-'}</td>
                           </tr>
                         );
                       })
                     ) : (
                       <tr>
-                        <td colSpan={3} style={{ padding: '20px', textAlign: 'center', color: '#888' }}>Data tidak ditemukan pada tanggal tersebut.</td>
+                        <td colSpan={4} style={{ padding: '20px', textAlign: 'center', color: '#888' }}>Data tidak ditemukan pada tanggal tersebut.</td>
                       </tr>
                     )}
                   </tbody>
@@ -606,7 +713,7 @@ export default function App() {
               </div>
               
               <div style={{ maxHeight: '280px', overflow: 'auto', border: '1px solid #dee2e6', borderRadius: '4px' }}>
-                <table style={{ width: '100%', minWidth: '640px', borderCollapse: 'collapse', fontSize: '14px' }}>
+                <table style={{ width: '100%', minWidth: '760px', borderCollapse: 'collapse', fontSize: '14px' }}>
                   <thead>
                     <tr style={{ textAlign: 'left' }}>
                       <th style={{ padding: '12px', whiteSpace: 'nowrap', position: 'sticky', top: 0, backgroundColor: '#f8f9fa', borderBottom: '2px solid #dee2e6', zIndex: 1 }}>Waktu Log</th>
@@ -616,6 +723,7 @@ export default function App() {
                       <th style={{ padding: '12px', whiteSpace: 'nowrap', position: 'sticky', top: 0, backgroundColor: '#f8f9fa', borderBottom: '2px solid #dee2e6', zIndex: 1 }}>Outlet</th>
                       <th style={{ padding: '12px', whiteSpace: 'nowrap', position: 'sticky', top: 0, backgroundColor: '#f8f9fa', borderBottom: '2px solid #dee2e6', zIndex: 1 }}>NH3-N</th>
                       <th style={{ padding: '12px', whiteSpace: 'nowrap', position: 'sticky', top: 0, backgroundColor: '#f8f9fa', borderBottom: '2px solid #dee2e6', zIndex: 1 }}>pH</th>
+                      <th style={{ padding: '12px', whiteSpace: 'nowrap', position: 'sticky', top: 0, backgroundColor: '#f8f9fa', borderBottom: '2px solid #dee2e6', zIndex: 1 }}>Diupload Oleh</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -638,12 +746,13 @@ export default function App() {
                             <td style={{ padding: '12px', whiteSpace: 'nowrap' }}>{item.debit_outlet}</td>
                             <td style={{ padding: '12px', whiteSpace: 'nowrap', color: isNh3Alert ? 'red' : 'inherit', fontWeight: isNh3Alert ? 'bold' : 'normal' }}>{item.nh3_n}</td>
                             <td style={{ padding: '12px', whiteSpace: 'nowrap', color: isPhAlert ? 'red' : 'inherit', fontWeight: isPhAlert ? 'bold' : 'normal' }}>{item.ph}</td>
+                            <td style={{ padding: '12px', whiteSpace: 'nowrap', color: '#6c757d' }}>{item.uploaded_by || '-'}</td>
                           </tr>
                         );
                       })
                     ) : (
                       <tr>
-                        <td colSpan={7} style={{ padding: '20px', textAlign: 'center', color: '#888' }}>Data tidak ditemukan pada tanggal tersebut.</td>
+                        <td colSpan={8} style={{ padding: '20px', textAlign: 'center', color: '#888' }}>Data tidak ditemukan pada tanggal tersebut.</td>
                       </tr>
                     )}
                   </tbody>
