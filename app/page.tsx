@@ -432,7 +432,7 @@ export default function App() {
             <h2 style={{ margin: '0 0 6px 0' }}>Form Input Parameter Utility</h2>
             <div style={{ marginBottom: '20px', marginTop: '16px' }}>
               <button onClick={() => setActiveForm('wtp')} style={{ padding: '10px 20px', marginRight: '10px', backgroundColor: activeForm === 'wtp' ? '#0dcaf0' : '#e9ecef', color: activeForm === 'wtp' ? '#fff' : '#333', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>Opsi WTP</button>
-              <button onClick={() => setActiveForm('wwtp')} style={{ padding: '10px 20px', backgroundColor: activeForm === 'wwtp' ? '#212529' : '#e9ecef', color: activeForm === 'wwtp' ? '#fff' : '#333', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>Opsi WWTP</button>
+              <button onClick={() => setActiveForm('wwtp')} style={{ padding: '10px 20px', backgroundColor: activeForm === 'wwtp' ? '#0dcaf0' : '#e9ecef', color: activeForm === 'wwtp' ? '#fff' : '#333', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>Opsi WWTP</button>
             </div>
             <form onSubmit={handleInputSubmit}>
               {activeForm === 'wtp' ? (
