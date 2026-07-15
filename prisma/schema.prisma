@@ -11,6 +11,7 @@ model wtp_logs {
   id           Int      @id @default(autoincrement())
   debit_inlet  Float
   debit_outlet Float
+  uploaded_by  String?
   created_at   DateTime @default(now())
 }
 
@@ -22,6 +23,7 @@ model wwtp_logs {
   debit_outlet Float
   nh3_n        Float
   ph           Float
+  uploaded_by  String?
   created_at   DateTime @default(now())
 }
 
