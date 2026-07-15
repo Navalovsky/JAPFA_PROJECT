@@ -23,6 +23,6 @@ export async function POST(request: Request) {
       user: { username: user.username, role: user.role }
     });
   } catch (error) {
-       return NextResponse.json({ error: String(error) }, { status: 500 });
+       return NextResponse.json({ error: 'Terjadi kesalahan server' }, { status: 500 });
    }
 }
