@@ -125,7 +125,7 @@ export default function App() {
               { label: 'Debit Outlet', data: jsonData.charts.wtp.map((d: any) => d.debit_outlet), borderColor: '#0d6efd', tension: 0.2 }
             ]
           },
-          options: { responsive: true }
+          options: { responsive: true, maintainAspectRatio: false }
         });
       }
     }
@@ -146,7 +146,7 @@ export default function App() {
               { label: 'pH', data: jsonData.charts.wwtp.map((d: any) => d.ph), borderColor: '#ffc107', tension: 0.2 }
             ]
           },
-          options: { responsive: true }
+          options: { responsive: true, maintainAspectRatio: false }
         });
       }
     }
@@ -377,48 +377,48 @@ export default function App() {
           <div>
             <h2 style={{ color: '#212529', margin: '0 0 24px 0' }}>Result System Monitoring</h2>
             
-            <div style={{ display: 'flex', gap: '20px', marginBottom: '24px' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', marginBottom: '24px' }}>
               {/* WTP STATUS BLOCK */}
-              <div style={{ flex: 1, backgroundColor: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
+              <div style={{ flex: '1 1 280px', minWidth: 0, backgroundColor: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
                 <h3 style={{ margin: '0 0 12px 0', color: '#000000' }}>WTP Status</h3>
                 <p>Debit Inlet: <strong style={{ color: (Number(latestWtp?.debit_inlet) < THRESHOLD.wtp.debit_inlet.min || Number(latestWtp?.debit_inlet) > THRESHOLD.wtp.debit_inlet.max) ? 'red' : 'inherit' }}>{latestWtp?.debit_inlet || 0}</strong> m³/h</p>
                 <p>Debit Outlet: <strong style={{ color: (Number(latestWtp?.debit_outlet) < THRESHOLD.wtp.debit_outlet.min || Number(latestWtp?.debit_outlet) > THRESHOLD.wtp.debit_outlet.max) ? 'red' : 'inherit' }}>{latestWtp?.debit_outlet || 0}</strong> m³/h</p>
-                <span style={{ backgroundColor: isWtpWarning ? '#dc3545' : '#25c281', color: '#fff', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold' }}>
+                <span style={{ display: 'inline-block', backgroundColor: isWtpWarning ? '#dc3545' : '#25c281', color: '#fff', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold' }}>
                   {isWtpWarning ? 'WARNING: Parameter WTP Tidak Normal!' : 'Normal'}
                 </span>
               </div>
 
               {/* WWTP STATUS BLOCK */}
-              <div style={{ flex: 1, backgroundColor: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
+              <div style={{ flex: '1 1 280px', minWidth: 0, backgroundColor: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
                 <h3 style={{ margin: '0 0 12px 0', color: '#212529' }}>WWTP Status</h3>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
-                  <div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', marginBottom: '10px' }}>
+                  <div style={{ flex: '1 1 120px' }}>
                     <p>COD: <strong style={{ color: Number(latestWwtp?.cod) > THRESHOLD.wwtp.cod.max ? 'red' : 'inherit' }}>{latestWwtp?.cod || 0}</strong> mg/L</p>
                     <p>BOD: <strong style={{ color: Number(latestWwtp?.bod) > THRESHOLD.wwtp.bod.max ? 'red' : 'inherit' }}>{latestWwtp?.bod || 0}</strong> mg/L</p>
                     <p>pH: <strong style={{ color: (Number(latestWwtp?.ph) < THRESHOLD.wwtp.ph.min || Number(latestWwtp?.ph) > THRESHOLD.wwtp.ph.max) ? 'red' : 'inherit' }}>{latestWwtp?.ph || 0}</strong></p>
                   </div>
-                  <div>
+                  <div style={{ flex: '1 1 120px' }}>
                     <p>Debit Inlet: <strong>{latestWwtp?.debit_inlet || 0}</strong> m³/h</p>
                     <p>Debit Outlet: <strong>{latestWwtp?.debit_outlet || 0}</strong> m³/h</p>
                     <p>NH3-N: <strong style={{ color: Number(latestWwtp?.nh3_n) > THRESHOLD.wwtp.nh3_n.max ? 'red' : 'inherit' }}>{latestWwtp?.nh3_n || 0}</strong> mg/L</p>
                   </div>
                 </div>
-                <span style={{ backgroundColor: isWwtpWarning ? '#dc3545' : '#25c281', color: '#fff', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold' }}>
+                <span style={{ display: 'inline-block', backgroundColor: isWwtpWarning ? '#dc3545' : '#25c281', color: '#fff', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold' }}>
                   {isWwtpWarning ? 'WARNING: Parameter WWTP Tidak Stabil!' : 'Normal'}
                 </span>
               </div>
             </div>
 
-            <div style={{ display: 'flex', gap: '20px' }}>
-              <div style={{ flex: 1, backgroundColor: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px' }}>
+              <div style={{ flex: '1 1 300px', minWidth: 0, backgroundColor: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
                 <h4 style={{ margin: '0 0 12px 0', color: '#6c757d' }}>Grafik Aliran WTP</h4>
-                <div style={{ position: 'relative', height: '280px' }}>
+                <div style={{ position: 'relative', height: '260px', width: '100%' }}>
                   <canvas ref={chartWtpRef}></canvas>
                 </div>
               </div>
-              <div style={{ flex: 1, backgroundColor: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
+              <div style={{ flex: '1 1 300px', minWidth: 0, backgroundColor: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
                 <h4 style={{ margin: '0 0 12px 0', color: '#6c757d' }}>Grafik Parameter WWTP</h4>
-                <div style={{ position: 'relative', height: '280px' }}>
+                <div style={{ position: 'relative', height: '260px', width: '100%' }}>
                   <canvas ref={chartWwtpRef}></canvas>
                 </div>
               </div>
@@ -436,7 +436,7 @@ export default function App() {
             </div>
             <form onSubmit={handleInputSubmit}>
               {activeForm === 'wtp' ? (
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px', marginBottom: '20px' }}>
                   <div>
                     <label style={{ display: 'block', marginBottom: '6px' }}>Debit Inlet (m³/h)</label>
                     <input type="number" step="0.01" value={wtpForm.debit_inlet} onChange={(e) => setWtpForm({...wtpForm, debit_inlet: e.target.value})} required style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }} />
@@ -447,7 +447,7 @@ export default function App() {
                   </div>
                 </div>
               ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px', marginBottom: '20px' }}>
                   <div>
                     <label style={{ display: 'block', marginBottom: '6px' }}>COD (mg/L)</label>
                     <input type="number" step="0.01" value={wwtpForm.cod} onChange={(e) => setWwtpForm({...wwtpForm, cod: e.target.value})} required style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }} />
@@ -507,13 +507,13 @@ export default function App() {
                 </div>
               </div>
               
-              <div style={{ maxHeight: '280px', overflowY: 'auto', border: '1px solid #dee2e6', borderRadius: '4px' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
-                  <thead style={{ position: 'sticky', top: 0, backgroundColor: '#f8f9fa', zIndex: 1 }}>
-                    <tr style={{ borderBottom: '2px solid #dee2e6', textAlign: 'left' }}>
-                      <th style={{ padding: '12px' }}>Waktu Log</th>
-                      <th style={{ padding: '12px' }}>Debit Inlet (m³/h)</th>
-                      <th style={{ padding: '12px' }}>Debit Outlet (m³/h)</th>
+              <div style={{ maxHeight: '280px', overflow: 'auto', border: '1px solid #dee2e6', borderRadius: '4px' }}>
+                <table style={{ width: '100%', minWidth: '480px', borderCollapse: 'collapse', fontSize: '14px' }}>
+                  <thead>
+                    <tr style={{ textAlign: 'left' }}>
+                      <th style={{ padding: '12px', whiteSpace: 'nowrap', position: 'sticky', top: 0, backgroundColor: '#f8f9fa', borderBottom: '2px solid #dee2e6', zIndex: 1 }}>Waktu Log</th>
+                      <th style={{ padding: '12px', whiteSpace: 'nowrap', position: 'sticky', top: 0, backgroundColor: '#f8f9fa', borderBottom: '2px solid #dee2e6', zIndex: 1 }}>Debit Inlet (m³/h)</th>
+                      <th style={{ padding: '12px', whiteSpace: 'nowrap', position: 'sticky', top: 0, backgroundColor: '#f8f9fa', borderBottom: '2px solid #dee2e6', zIndex: 1 }}>Debit Outlet (m³/h)</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -523,12 +523,12 @@ export default function App() {
                         const isWtpOutletAlert = Number(item.debit_outlet) < THRESHOLD.wtp.debit_outlet.min || Number(item.debit_outlet) > THRESHOLD.wtp.debit_outlet.max;
                         return (
                           <tr key={item.id} style={{ borderBottom: '1px solid #dee2e6' }}>
-                            <td style={{ padding: '12px' }}>
+                            <td style={{ padding: '12px', whiteSpace: 'nowrap' }}>
                               {new Date(item.created_at).toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' })} -{' '}
                               {new Date(item.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
                             </td>
-                            <td style={{ padding: '12px', color: isWtpInletAlert ? 'red' : 'inherit', fontWeight: isWtpInletAlert ? 'bold' : 'normal' }}>{item.debit_inlet}</td>
-                            <td style={{ padding: '12px', color: isWtpOutletAlert ? 'red' : 'inherit', fontWeight: isWtpOutletAlert ? 'bold' : 'normal' }}>{item.debit_outlet}</td>
+                            <td style={{ padding: '12px', whiteSpace: 'nowrap', color: isWtpInletAlert ? 'red' : 'inherit', fontWeight: isWtpInletAlert ? 'bold' : 'normal' }}>{item.debit_inlet}</td>
+                            <td style={{ padding: '12px', whiteSpace: 'nowrap', color: isWtpOutletAlert ? 'red' : 'inherit', fontWeight: isWtpOutletAlert ? 'bold' : 'normal' }}>{item.debit_outlet}</td>
                           </tr>
                         );
                       })
@@ -565,17 +565,17 @@ export default function App() {
                 </div>
               </div>
               
-              <div style={{ maxHeight: '280px', overflowY: 'auto', border: '1px solid #dee2e6', borderRadius: '4px' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
-                  <thead style={{ position: 'sticky', top: 0, backgroundColor: '#f8f9fa', zIndex: 1 }}>
-                    <tr style={{ borderBottom: '2px solid #dee2e6', textAlign: 'left' }}>
-                      <th style={{ padding: '12px' }}>Waktu Log</th>
-                      <th style={{ padding: '12px' }}>COD</th>
-                      <th style={{ padding: '12px' }}>BOD</th>
-                      <th style={{ padding: '12px' }}>Inlet</th>
-                      <th style={{ padding: '12px' }}>Outlet</th>
-                      <th style={{ padding: '12px' }}>NH3-N</th>
-                      <th style={{ padding: '12px' }}>pH</th>
+              <div style={{ maxHeight: '280px', overflow: 'auto', border: '1px solid #dee2e6', borderRadius: '4px' }}>
+                <table style={{ width: '100%', minWidth: '640px', borderCollapse: 'collapse', fontSize: '14px' }}>
+                  <thead>
+                    <tr style={{ textAlign: 'left' }}>
+                      <th style={{ padding: '12px', whiteSpace: 'nowrap', position: 'sticky', top: 0, backgroundColor: '#f8f9fa', borderBottom: '2px solid #dee2e6', zIndex: 1 }}>Waktu Log</th>
+                      <th style={{ padding: '12px', whiteSpace: 'nowrap', position: 'sticky', top: 0, backgroundColor: '#f8f9fa', borderBottom: '2px solid #dee2e6', zIndex: 1 }}>COD</th>
+                      <th style={{ padding: '12px', whiteSpace: 'nowrap', position: 'sticky', top: 0, backgroundColor: '#f8f9fa', borderBottom: '2px solid #dee2e6', zIndex: 1 }}>BOD</th>
+                      <th style={{ padding: '12px', whiteSpace: 'nowrap', position: 'sticky', top: 0, backgroundColor: '#f8f9fa', borderBottom: '2px solid #dee2e6', zIndex: 1 }}>Inlet</th>
+                      <th style={{ padding: '12px', whiteSpace: 'nowrap', position: 'sticky', top: 0, backgroundColor: '#f8f9fa', borderBottom: '2px solid #dee2e6', zIndex: 1 }}>Outlet</th>
+                      <th style={{ padding: '12px', whiteSpace: 'nowrap', position: 'sticky', top: 0, backgroundColor: '#f8f9fa', borderBottom: '2px solid #dee2e6', zIndex: 1 }}>NH3-N</th>
+                      <th style={{ padding: '12px', whiteSpace: 'nowrap', position: 'sticky', top: 0, backgroundColor: '#f8f9fa', borderBottom: '2px solid #dee2e6', zIndex: 1 }}>pH</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -588,16 +588,16 @@ export default function App() {
 
                         return (
                           <tr key={item.id} style={{ borderBottom: '1px solid #dee2e6' }}>
-                            <td style={{ padding: '12px' }}>
+                            <td style={{ padding: '12px', whiteSpace: 'nowrap' }}>
                             {new Date(item.created_at).toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' })} -{' '}
                             {new Date(item.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
                           </td>
-                            <td style={{ padding: '12px', color: isCodAlert ? 'red' : 'inherit', fontWeight: isCodAlert ? 'bold' : 'normal' }}>{item.cod}</td>
-                            <td style={{ padding: '12px', color: isBodAlert ? 'red' : 'inherit', fontWeight: isBodAlert ? 'bold' : 'normal' }}>{item.bod}</td>
-                            <td style={{ padding: '12px' }}>{item.debit_inlet}</td>
-                            <td style={{ padding: '12px' }}>{item.debit_outlet}</td>
-                            <td style={{ padding: '12px', color: isNh3Alert ? 'red' : 'inherit', fontWeight: isNh3Alert ? 'bold' : 'normal' }}>{item.nh3_n}</td>
-                            <td style={{ padding: '12px', color: isPhAlert ? 'red' : 'inherit', fontWeight: isPhAlert ? 'bold' : 'normal' }}>{item.ph}</td>
+                            <td style={{ padding: '12px', whiteSpace: 'nowrap', color: isCodAlert ? 'red' : 'inherit', fontWeight: isCodAlert ? 'bold' : 'normal' }}>{item.cod}</td>
+                            <td style={{ padding: '12px', whiteSpace: 'nowrap', color: isBodAlert ? 'red' : 'inherit', fontWeight: isBodAlert ? 'bold' : 'normal' }}>{item.bod}</td>
+                            <td style={{ padding: '12px', whiteSpace: 'nowrap' }}>{item.debit_inlet}</td>
+                            <td style={{ padding: '12px', whiteSpace: 'nowrap' }}>{item.debit_outlet}</td>
+                            <td style={{ padding: '12px', whiteSpace: 'nowrap', color: isNh3Alert ? 'red' : 'inherit', fontWeight: isNh3Alert ? 'bold' : 'normal' }}>{item.nh3_n}</td>
+                            <td style={{ padding: '12px', whiteSpace: 'nowrap', color: isPhAlert ? 'red' : 'inherit', fontWeight: isPhAlert ? 'bold' : 'normal' }}>{item.ph}</td>
                           </tr>
                         );
                       })
