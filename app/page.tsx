@@ -40,7 +40,7 @@ export default function App() {
   const [registerSuccess, setRegisterSuccess] = useState('');
 
   // Pulihkan sesi login dari sessionStorage saat aplikasi pertama kali dibuka / di-refresh
-  const [activeMenu, setActiveMenu] = useState<'dashboard' | 'input-mingguan' | 'view-mingguan'>('dashboard');
+  const [activeMenu, setActiveMenu] = useState<'dashboard-wtp' | 'dashboard-wwtp' | 'input-mingguan' | 'view-mingguan'>('dashboard-wtp');
 
   useEffect(() => {
     try {
@@ -49,7 +49,7 @@ export default function App() {
         setUser(JSON.parse(savedUser));
       }
       const savedMenu = sessionStorage.getItem('japfa_active_menu');
-      if (savedMenu === 'dashboard' || savedMenu === 'input-mingguan' || savedMenu === 'view-mingguan') {
+      if (savedMenu === 'dashboard-wtp' || savedMenu === 'dashboard-wwtp' || savedMenu === 'input-mingguan' || savedMenu === 'view-mingguan') {
         setActiveMenu(savedMenu);
       }
     } catch (err) {
@@ -84,7 +84,7 @@ export default function App() {
   }, []);
 
   // Tutup sidebar otomatis setelah pilih menu (khusus mobile)
-  const handleMenuSelect = (menu: 'dashboard' | 'input-mingguan' | 'view-mingguan') => {
+  const handleMenuSelect = (menu: 'dashboard-wtp' | 'dashboard-wwtp' | 'input-mingguan' | 'view-mingguan') => {
     setActiveMenu(menu);
     if (isMobile) setSidebarOpen(false);
   };
@@ -124,7 +124,7 @@ export default function App() {
         };
         setUser(loggedInUser);
         sessionStorage.setItem('japfa_user', JSON.stringify(loggedInUser));
-        setActiveMenu('dashboard');
+        setActiveMenu('dashboard-wtp');
       } else {
         setLoginError(resData.error || 'Login gagal');
       }
@@ -172,7 +172,7 @@ export default function App() {
     if (chartWwtpInstance.current) { chartWwtpInstance.current.destroy(); chartWwtpInstance.current = null; }
     setUser(null);
     setData(null);
-    setActiveMenu('dashboard');
+    setActiveMenu('dashboard-wtp');
     sessionStorage.removeItem('japfa_user');
     sessionStorage.removeItem('japfa_active_menu');
   };
@@ -251,7 +251,7 @@ export default function App() {
   useEffect(() => {
     if (!user) return;
 
-    if (activeMenu === 'dashboard') {
+    if (activeMenu === 'dashboard-wtp' || activeMenu === 'dashboard-wwtp') {
       if (chartWtpInstance.current) { chartWtpInstance.current.destroy(); chartWtpInstance.current = null; }
       if (chartWwtpInstance.current) { chartWwtpInstance.current.destroy(); chartWwtpInstance.current = null; }
       
@@ -279,7 +279,7 @@ export default function App() {
         setWtpForm({ debit_inlet: '', debit_outlet: '' });
         setWwtpForm({ cod: '', bod: '', debit_inlet: '', debit_outlet: '', nh3_n: '', ph: '' });
         fetchWeeklyData();
-        setActiveMenu('dashboard');
+        setActiveMenu('dashboard-wtp');
       } else {
         alert('Gagal menyimpan data');
       }
@@ -493,8 +493,12 @@ export default function App() {
           </div>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <button onClick={() => handleMenuSelect('dashboard')} style={{ padding: '12px', textAlign: 'left', backgroundColor: activeMenu === 'dashboard' ? '#0d6efd' : 'transparent', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <LayoutDashboard size={18} /> Result Dashboard
+            <button onClick={() => handleMenuSelect('dashboard-wtp')} style={{ padding: '12px', textAlign: 'left', backgroundColor: activeMenu === 'dashboard-wtp' ? '#0d6efd' : 'transparent', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <LayoutDashboard size={18} /> Dashboard WTP
+            </button>
+
+            <button onClick={() => handleMenuSelect('dashboard-wwtp')} style={{ padding: '12px', textAlign: 'left', backgroundColor: activeMenu === 'dashboard-wwtp' ? '#0d6efd' : 'transparent', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <LayoutDashboard size={18} /> Dashboard WWTP
             </button>
             
             {user.role === 'engineer' && (
@@ -517,14 +521,13 @@ export default function App() {
       {/* CONTENT REGION */}
       <div style={{ flex: 1, padding: isMobile ? '72px 16px 24px 16px' : '32px', overflowY: 'auto', width: '100%' }}>
         
-        {/* MENU: DASHBOARD */}
-        {activeMenu === 'dashboard' && (
+        {/* MENU: DASHBOARD WTP */}
+        {activeMenu === 'dashboard-wtp' && (
           <div>
-            <h2 style={{ color: '#212529', margin: '0 0 24px 0' }}>Result System Monitoring</h2>
-            
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', marginBottom: '24px' }}>
-              {/* WTP STATUS BLOCK */}
-              <div style={{ flex: '1 1 280px', minWidth: 0, backgroundColor: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
+            <h2 style={{ color: '#212529', margin: '0 0 24px 0' }}>Result Monitoring - WTP</h2>
+
+            <div style={{ marginBottom: '24px' }}>
+              <div style={{ backgroundColor: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
                 <h3 style={{ margin: '0 0 12px 0', color: '#000000' }}>WTP Status</h3>
                 <p>Debit Inlet: <strong style={{ color: (Number(latestWtp?.debit_inlet) < THRESHOLD.wtp.debit_inlet.min || Number(latestWtp?.debit_inlet) > THRESHOLD.wtp.debit_inlet.max) ? 'red' : 'inherit' }}>{latestWtp?.debit_inlet || 0}</strong> m³/h</p>
                 <p>Debit Outlet: <strong style={{ color: (Number(latestWtp?.debit_outlet) < THRESHOLD.wtp.debit_outlet.min || Number(latestWtp?.debit_outlet) > THRESHOLD.wtp.debit_outlet.max) ? 'red' : 'inherit' }}>{latestWtp?.debit_outlet || 0}</strong> m³/h</p>
@@ -532,9 +535,24 @@ export default function App() {
                   {isWtpWarning ? 'WARNING: Parameter WTP Tidak Normal!' : 'Normal'}
                 </span>
               </div>
+            </div>
 
-              {/* WWTP STATUS BLOCK */}
-              <div style={{ flex: '1 1 280px', minWidth: 0, backgroundColor: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
+            <div style={{ backgroundColor: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
+              <h4 style={{ margin: '0 0 12px 0', color: '#6c757d' }}>Grafik Aliran WTP</h4>
+              <div style={{ position: 'relative', height: '260px', width: '100%' }}>
+                <canvas ref={chartWtpRef}></canvas>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* MENU: DASHBOARD WWTP */}
+        {activeMenu === 'dashboard-wwtp' && (
+          <div>
+            <h2 style={{ color: '#212529', margin: '0 0 24px 0' }}>Result Monitoring - WWTP</h2>
+
+            <div style={{ marginBottom: '24px' }}>
+              <div style={{ backgroundColor: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
                 <h3 style={{ margin: '0 0 12px 0', color: '#212529' }}>WWTP Status</h3>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', marginBottom: '10px' }}>
                   <div style={{ flex: '1 1 120px' }}>
@@ -554,18 +572,10 @@ export default function App() {
               </div>
             </div>
 
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px' }}>
-              <div style={{ flex: '1 1 300px', minWidth: 0, backgroundColor: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
-                <h4 style={{ margin: '0 0 12px 0', color: '#6c757d' }}>Grafik Aliran WTP</h4>
-                <div style={{ position: 'relative', height: '260px', width: '100%' }}>
-                  <canvas ref={chartWtpRef}></canvas>
-                </div>
-              </div>
-              <div style={{ flex: '1 1 300px', minWidth: 0, backgroundColor: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
-                <h4 style={{ margin: '0 0 12px 0', color: '#6c757d' }}>Grafik Parameter WWTP</h4>
-                <div style={{ position: 'relative', height: '260px', width: '100%' }}>
-                  <canvas ref={chartWwtpRef}></canvas>
-                </div>
+            <div style={{ backgroundColor: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
+              <h4 style={{ margin: '0 0 12px 0', color: '#6c757d' }}>Grafik Parameter WWTP</h4>
+              <div style={{ position: 'relative', height: '260px', width: '100%' }}>
+                <canvas ref={chartWwtpRef}></canvas>
               </div>
             </div>
           </div>
@@ -577,7 +587,7 @@ export default function App() {
             <h2 style={{ margin: '0 0 6px 0' }}>Form Input Parameter Utility</h2>
             <div style={{ marginBottom: '20px', marginTop: '16px' }}>
               <button onClick={() => setActiveForm('wtp')} style={{ padding: '10px 20px', marginRight: '10px', backgroundColor: activeForm === 'wtp' ? '#0dcaf0' : '#e9ecef', color: activeForm === 'wtp' ? '#fff' : '#333', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>Opsi WTP</button>
-              <button onClick={() => setActiveForm('wwtp')} style={{ padding: '10px 20px', backgroundColor: activeForm === 'wwtp' ? '#0dcaf0' : '#e9ecef', color: activeForm === 'wwtp' ? '#fff' : '#333', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>Opsi WWTP</button>
+              <button onClick={() => setActiveForm('wwtp')} style={{ padding: '10px 20px', backgroundColor: activeForm === 'wwtp' ? '#212529' : '#e9ecef', color: activeForm === 'wwtp' ? '#fff' : '#333', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>Opsi WWTP</button>
             </div>
             <form onSubmit={handleInputSubmit}>
               {activeForm === 'wtp' ? (
