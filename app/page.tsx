@@ -501,6 +501,12 @@ export default function App() {
             <button onClick={() => handleMenuSelect('dashboard-wwtp')} style={{ padding: '12px', textAlign: 'left', backgroundColor: activeMenu === 'dashboard-wwtp' ? '#0d6efd' : 'transparent', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '10px' }}>
               <LayoutDashboard size={18} /> Dashboard WWTP
             </button>
+            
+            {user.role === 'engineer' && (
+              <button onClick={() => handleMenuSelect('input-mingguan')} style={{ padding: '12px', textAlign: 'left', backgroundColor: activeMenu === 'input-mingguan' ? '#0d6efd' : 'transparent', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <FilePenLine size={18} /> Input Log Mingguan
+              </button>
+            )}
           </div>
         </div>
 
@@ -700,6 +706,59 @@ export default function App() {
                 </table>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* MENU: FORM INPUT MINGGUAN */}
+        {activeMenu === 'input-mingguan' && user.role === 'engineer' && (
+          <div style={{ backgroundColor: '#fff', padding: '28px', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+            <h2 style={{ margin: '0 0 6px 0' }}>Form Input Parameter Utility</h2>
+            <div style={{ marginBottom: '20px', marginTop: '16px' }}>
+              <button onClick={() => setActiveForm('wtp')} style={{ padding: '10px 20px', marginRight: '10px', backgroundColor: activeForm === 'wtp' ? '#0dcaf0' : '#e9ecef', color: activeForm === 'wtp' ? '#fff' : '#333', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>Opsi WTP</button>
+              <button onClick={() => setActiveForm('wwtp')} style={{ padding: '10px 20px', backgroundColor: activeForm === 'wwtp' ? '#212529' : '#e9ecef', color: activeForm === 'wwtp' ? '#fff' : '#333', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>Opsi WWTP</button>
+            </div>
+            <form onSubmit={handleInputSubmit}>
+              {activeForm === 'wtp' ? (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px', marginBottom: '20px' }}>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '6px' }}>Debit Inlet (m³/h)</label>
+                    <input type="number" step="0.01" value={wtpForm.debit_inlet} onChange={(e) => setWtpForm({...wtpForm, debit_inlet: e.target.value})} required style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }} />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '6px' }}>Debit Outlet (m³/h)</label>
+                    <input type="number" step="0.01" value={wtpForm.debit_outlet} onChange={(e) => setWtpForm({...wtpForm, debit_outlet: e.target.value})} required style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }} />
+                  </div>
+                </div>
+              ) : (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px', marginBottom: '20px' }}>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '6px' }}>COD (mg/L)</label>
+                    <input type="number" step="0.01" value={wwtpForm.cod} onChange={(e) => setWwtpForm({...wwtpForm, cod: e.target.value})} required style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }} />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '6px' }}>BOD (mg/L)</label>
+                    <input type="number" step="0.01" value={wwtpForm.bod} onChange={(e) => setWwtpForm({...wwtpForm, bod: e.target.value})} required style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }} />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '6px' }}>Debit Inlet (m³/h)</label>
+                    <input type="number" step="0.01" value={wwtpForm.debit_inlet} onChange={(e) => setWwtpForm({...wwtpForm, debit_inlet: e.target.value})} required style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }} />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '6px' }}>Debit Outlet (m³/h)</label>
+                    <input type="number" step="0.01" value={wwtpForm.debit_outlet} onChange={(e) => setWwtpForm({...wwtpForm, debit_outlet: e.target.value})} required style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }} />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '6px' }}>NH3-N (mg/L)</label>
+                    <input type="number" step="0.01" value={wwtpForm.nh3_n} onChange={(e) => setWwtpForm({...wwtpForm, nh3_n: e.target.value})} required style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }} />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '6px' }}>pH</label>
+                    <input type="number" step="0.01" value={wwtpForm.ph} onChange={(e) => setWwtpForm({...wwtpForm, ph: e.target.value})} required style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }} />
+                  </div>
+                </div>
+              )}
+              <button type="submit" style={{ padding: '12px 24px', backgroundColor: '#0d6efd', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>KIRIM DATA LOG</button>
+            </form>
           </div>
         )}
 
