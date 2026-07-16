@@ -422,7 +422,7 @@ export default function App() {
   }
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', fontFamily: 'sans-serif', backgroundColor: '#f8f9fa', position: 'relative' }}>
+    <div style={{ display: 'flex', height: '100vh', fontFamily: 'sans-serif', backgroundColor: '#f8f9fa', position: 'relative', overflow: 'hidden' }}>
 
       {/* TOP BAR MOBILE (hanya tampil di layar kecil) */}
       {isMobile && (
