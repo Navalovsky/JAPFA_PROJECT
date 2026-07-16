@@ -279,7 +279,7 @@ export default function App() {
         setWtpForm({ debit_inlet: '', debit_outlet: '' });
         setWwtpForm({ cod: '', bod: '', debit_inlet: '', debit_outlet: '', nh3_n: '', ph: '' });
         fetchWeeklyData();
-        setActiveMenu('dashboard-wtp');
+        setActiveMenu(activeForm === 'wtp' ? 'dashboard-wtp' : 'dashboard-wwtp');
       } else {
         alert('Gagal menyimpan data');
       }
