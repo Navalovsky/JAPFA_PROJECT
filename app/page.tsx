@@ -501,12 +501,6 @@ export default function App() {
             <button onClick={() => handleMenuSelect('dashboard-wwtp')} style={{ padding: '12px', textAlign: 'left', backgroundColor: activeMenu === 'dashboard-wwtp' ? '#0d6efd' : 'transparent', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '10px' }}>
               <LayoutDashboard size={18} /> Dashboard WWTP
             </button>
-            
-            {user.role === 'engineer' && (
-              <button onClick={() => handleMenuSelect('input-mingguan')} style={{ padding: '12px', textAlign: 'left', backgroundColor: activeMenu === 'input-mingguan' ? '#0d6efd' : 'transparent', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <FilePenLine size={18} /> Input Log Mingguan
-              </button>
-            )}
           </div>
         </div>
 
