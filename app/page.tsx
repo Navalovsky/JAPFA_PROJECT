@@ -40,7 +40,7 @@ export default function App() {
   const [registerSuccess, setRegisterSuccess] = useState('');
 
   // Pulihkan sesi login dari sessionStorage saat aplikasi pertama kali dibuka / di-refresh
-  const [activeMenu, setActiveMenu] = useState<'dashboard-wtp' | 'dashboard-wwtp' | 'input-mingguan' | 'view-mingguan'>('dashboard-wtp');
+  const [activeMenu, setActiveMenu] = useState<'dashboard-wtp' | 'dashboard-wwtp' | 'input-mingguan'>('dashboard-wtp');
 
   useEffect(() => {
     try {
@@ -49,7 +49,7 @@ export default function App() {
         setUser(JSON.parse(savedUser));
       }
       const savedMenu = sessionStorage.getItem('japfa_active_menu');
-      if (savedMenu === 'dashboard-wtp' || savedMenu === 'dashboard-wwtp' || savedMenu === 'input-mingguan' || savedMenu === 'view-mingguan') {
+      if (savedMenu === 'dashboard-wtp' || savedMenu === 'dashboard-wwtp' || savedMenu === 'input-mingguan') {
         setActiveMenu(savedMenu);
       }
     } catch (err) {
@@ -84,7 +84,7 @@ export default function App() {
   }, []);
 
   // Tutup sidebar otomatis setelah pilih menu (khusus mobile)
-  const handleMenuSelect = (menu: 'dashboard-wtp' | 'dashboard-wwtp' | 'input-mingguan' | 'view-mingguan') => {
+  const handleMenuSelect = (menu: 'dashboard-wtp' | 'dashboard-wwtp' | 'input-mingguan') => {
     setActiveMenu(menu);
     if (isMobile) setSidebarOpen(false);
   };
@@ -256,6 +256,7 @@ export default function App() {
       if (chartWwtpInstance.current) { chartWwtpInstance.current.destroy(); chartWwtpInstance.current = null; }
       
       fetchData();
+      fetchWeeklyData();
       const interval = setInterval(fetchData, 2000);
       return () => clearInterval(interval);
     } else {
@@ -506,10 +507,6 @@ export default function App() {
                 <FilePenLine size={18} /> Input Log Mingguan
               </button>
             )}
-
-            <button onClick={() => handleMenuSelect('view-mingguan')} style={{ padding: '12px', textAlign: 'left', backgroundColor: activeMenu === 'view-mingguan' ? '#0d6efd' : 'transparent', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <CalendarDays size={18} /> Data Log 1 Minggu
-            </button>
           </div>
         </div>
 
@@ -537,123 +534,28 @@ export default function App() {
               </div>
             </div>
 
-            <div style={{ backgroundColor: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
+            <div style={{ backgroundColor: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', marginBottom: '24px' }}>
               <h4 style={{ margin: '0 0 12px 0', color: '#6c757d' }}>Grafik Aliran WTP</h4>
               <div style={{ position: 'relative', height: '260px', width: '100%' }}>
                 <canvas ref={chartWtpRef}></canvas>
               </div>
             </div>
-          </div>
-        )}
 
-        {/* MENU: DASHBOARD WWTP */}
-        {activeMenu === 'dashboard-wwtp' && (
-          <div>
-            <h2 style={{ color: '#212529', margin: '0 0 24px 0' }}>Result Monitoring - WWTP</h2>
-
-            <div style={{ marginBottom: '24px' }}>
-              <div style={{ backgroundColor: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
-                <h3 style={{ margin: '0 0 12px 0', color: '#212529' }}>WWTP Status</h3>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', marginBottom: '10px' }}>
-                  <div style={{ flex: '1 1 120px' }}>
-                    <p>COD: <strong style={{ color: Number(latestWwtp?.cod) > THRESHOLD.wwtp.cod.max ? 'red' : 'inherit' }}>{latestWwtp?.cod || 0}</strong> mg/L</p>
-                    <p>BOD: <strong style={{ color: Number(latestWwtp?.bod) > THRESHOLD.wwtp.bod.max ? 'red' : 'inherit' }}>{latestWwtp?.bod || 0}</strong> mg/L</p>
-                    <p>pH: <strong style={{ color: (Number(latestWwtp?.ph) < THRESHOLD.wwtp.ph.min || Number(latestWwtp?.ph) > THRESHOLD.wwtp.ph.max) ? 'red' : 'inherit' }}>{latestWwtp?.ph || 0}</strong></p>
-                  </div>
-                  <div style={{ flex: '1 1 120px' }}>
-                    <p>Debit Inlet: <strong>{latestWwtp?.debit_inlet || 0}</strong> m³/h</p>
-                    <p>Debit Outlet: <strong>{latestWwtp?.debit_outlet || 0}</strong> m³/h</p>
-                    <p>NH3-N: <strong style={{ color: Number(latestWwtp?.nh3_n) > THRESHOLD.wwtp.nh3_n.max ? 'red' : 'inherit' }}>{latestWwtp?.nh3_n || 0}</strong> mg/L</p>
-                  </div>
-                </div>
-                <span style={{ display: 'inline-block', backgroundColor: isWwtpWarning ? '#dc3545' : '#25c281', color: '#fff', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold' }}>
-                  {isWwtpWarning ? 'WARNING: Parameter WWTP Tidak Stabil!' : 'Normal'}
-                </span>
-              </div>
-            </div>
-
-            <div style={{ backgroundColor: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
-              <h4 style={{ margin: '0 0 12px 0', color: '#6c757d' }}>Grafik Parameter WWTP</h4>
-              <div style={{ position: 'relative', height: '260px', width: '100%' }}>
-                <canvas ref={chartWwtpRef}></canvas>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* MENU: FORM INPUT MINGGUAN */}
-        {activeMenu === 'input-mingguan' && user.role === 'engineer' && (
-          <div style={{ backgroundColor: '#fff', padding: '28px', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
-            <h2 style={{ margin: '0 0 6px 0' }}>Form Input Parameter Utility</h2>
-            <div style={{ marginBottom: '20px', marginTop: '16px' }}>
-              <button onClick={() => setActiveForm('wtp')} style={{ padding: '10px 20px', marginRight: '10px', backgroundColor: activeForm === 'wtp' ? '#0dcaf0' : '#e9ecef', color: activeForm === 'wtp' ? '#fff' : '#333', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>Opsi WTP</button>
-              <button onClick={() => setActiveForm('wwtp')} style={{ padding: '10px 20px', backgroundColor: activeForm === 'wwtp' ? '#212529' : '#e9ecef', color: activeForm === 'wwtp' ? '#fff' : '#333', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>Opsi WWTP</button>
-            </div>
-            <form onSubmit={handleInputSubmit}>
-              {activeForm === 'wtp' ? (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px', marginBottom: '20px' }}>
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '6px' }}>Debit Inlet (m³/h)</label>
-                    <input type="number" step="0.01" value={wtpForm.debit_inlet} onChange={(e) => setWtpForm({...wtpForm, debit_inlet: e.target.value})} required style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }} />
-                  </div>
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '6px' }}>Debit Outlet (m³/h)</label>
-                    <input type="number" step="0.01" value={wtpForm.debit_outlet} onChange={(e) => setWtpForm({...wtpForm, debit_outlet: e.target.value})} required style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }} />
-                  </div>
-                </div>
-              ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px', marginBottom: '20px' }}>
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '6px' }}>COD (mg/L)</label>
-                    <input type="number" step="0.01" value={wwtpForm.cod} onChange={(e) => setWwtpForm({...wwtpForm, cod: e.target.value})} required style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }} />
-                  </div>
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '6px' }}>BOD (mg/L)</label>
-                    <input type="number" step="0.01" value={wwtpForm.bod} onChange={(e) => setWwtpForm({...wwtpForm, bod: e.target.value})} required style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }} />
-                  </div>
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '6px' }}>Debit Inlet (m³/h)</label>
-                    <input type="number" step="0.01" value={wwtpForm.debit_inlet} onChange={(e) => setWwtpForm({...wwtpForm, debit_inlet: e.target.value})} required style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }} />
-                  </div>
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '6px' }}>Debit Outlet (m³/h)</label>
-                    <input type="number" step="0.01" value={wwtpForm.debit_outlet} onChange={(e) => setWwtpForm({...wwtpForm, debit_outlet: e.target.value})} required style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }} />
-                  </div>
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '6px' }}>NH3-N (mg/L)</label>
-                    <input type="number" step="0.01" value={wwtpForm.nh3_n} onChange={(e) => setWwtpForm({...wwtpForm, nh3_n: e.target.value})} required style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }} />
-                  </div>
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '6px' }}>pH</label>
-                    <input type="number" step="0.01" value={wwtpForm.ph} onChange={(e) => setWwtpForm({...wwtpForm, ph: e.target.value})} required style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }} />
-                  </div>
-                </div>
-              )}
-              <button type="submit" style={{ padding: '12px 24px', backgroundColor: '#0d6efd', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>KIRIM DATA LOG</button>
-            </form>
-          </div>
-        )}
-
-        {/* MENU: DATA LOG TABEL 1 MINGGU */}
-        {activeMenu === 'view-mingguan' && (
-          <div>
-            <h2 style={{ margin: '0 0 24px 0' }}>Laporan Rekap Log Mingguan (7 Hari Terakhir)</h2>
-            
             {/* TABEL HISTORI WTP */}
-            <div style={{ backgroundColor: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', marginBottom: '24px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                <h4 style={{ color: '#000000', margin: 0 }}>Histori Mingguan WTP</h4>
+            <div style={{ backgroundColor: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
+                <h4 style={{ color: '#000000', margin: 0 }}>Histori Mingguan WTP (7 Hari Terakhir)</h4>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <label style={{ fontSize: '13px', color: '#6c757d', fontWeight: 'bold' }}>Cari Tanggal:</label>
-                  <input 
-                    type="date" 
-                    value={searchDateWtp} 
-                    onChange={(e) => setSearchDateWtp(e.target.value)} 
-                    style={{ padding: '6px 12px', border: '1px solid #ccc', borderRadius: '4px', fontSize: '13px' }} 
+                  <input
+                    type="date"
+                    value={searchDateWtp}
+                    onChange={(e) => setSearchDateWtp(e.target.value)}
+                    style={{ padding: '6px 12px', border: '1px solid #ccc', borderRadius: '4px', fontSize: '13px' }}
                   />
                   {searchDateWtp && (
-                    <button 
-                      onClick={() => setSearchDateWtp('')} 
+                    <button
+                      onClick={() => setSearchDateWtp('')}
                       style={{ padding: '6px 10px', backgroundColor: '#e9ecef', border: '1px solid #ccc', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}
                     >
                       Reset
@@ -661,7 +563,7 @@ export default function App() {
                   )}
                 </div>
               </div>
-              
+
               <div style={{ maxHeight: '280px', overflow: 'auto', border: '1px solid #dee2e6', borderRadius: '4px' }}>
                 <table style={{ width: '100%', minWidth: '480px', borderCollapse: 'collapse', fontSize: '14px' }}>
                   <thead>
@@ -698,22 +600,57 @@ export default function App() {
                 </table>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* MENU: DASHBOARD WWTP */}
+        {activeMenu === 'dashboard-wwtp' && (
+          <div>
+            <h2 style={{ color: '#212529', margin: '0 0 24px 0' }}>Result Monitoring - WWTP</h2>
+
+            <div style={{ marginBottom: '24px' }}>
+              <div style={{ backgroundColor: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
+                <h3 style={{ margin: '0 0 12px 0', color: '#212529' }}>WWTP Status</h3>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', marginBottom: '10px' }}>
+                  <div style={{ flex: '1 1 120px' }}>
+                    <p>COD: <strong style={{ color: Number(latestWwtp?.cod) > THRESHOLD.wwtp.cod.max ? 'red' : 'inherit' }}>{latestWwtp?.cod || 0}</strong> mg/L</p>
+                    <p>BOD: <strong style={{ color: Number(latestWwtp?.bod) > THRESHOLD.wwtp.bod.max ? 'red' : 'inherit' }}>{latestWwtp?.bod || 0}</strong> mg/L</p>
+                    <p>pH: <strong style={{ color: (Number(latestWwtp?.ph) < THRESHOLD.wwtp.ph.min || Number(latestWwtp?.ph) > THRESHOLD.wwtp.ph.max) ? 'red' : 'inherit' }}>{latestWwtp?.ph || 0}</strong></p>
+                  </div>
+                  <div style={{ flex: '1 1 120px' }}>
+                    <p>Debit Inlet: <strong>{latestWwtp?.debit_inlet || 0}</strong> m³/h</p>
+                    <p>Debit Outlet: <strong>{latestWwtp?.debit_outlet || 0}</strong> m³/h</p>
+                    <p>NH3-N: <strong style={{ color: Number(latestWwtp?.nh3_n) > THRESHOLD.wwtp.nh3_n.max ? 'red' : 'inherit' }}>{latestWwtp?.nh3_n || 0}</strong> mg/L</p>
+                  </div>
+                </div>
+                <span style={{ display: 'inline-block', backgroundColor: isWwtpWarning ? '#dc3545' : '#25c281', color: '#fff', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold' }}>
+                  {isWwtpWarning ? 'WARNING: Parameter WWTP Tidak Stabil!' : 'Normal'}
+                </span>
+              </div>
+            </div>
+
+            <div style={{ backgroundColor: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', marginBottom: '24px' }}>
+              <h4 style={{ margin: '0 0 12px 0', color: '#6c757d' }}>Grafik Parameter WWTP</h4>
+              <div style={{ position: 'relative', height: '260px', width: '100%' }}>
+                <canvas ref={chartWwtpRef}></canvas>
+              </div>
+            </div>
 
             {/* TABEL HISTORI WWTP */}
             <div style={{ backgroundColor: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                <h4 style={{ color: '#212529', margin: 0 }}>Histori Mingguan WWTP</h4>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
+                <h4 style={{ color: '#212529', margin: 0 }}>Histori Mingguan WWTP (7 Hari Terakhir)</h4>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <label style={{ fontSize: '13px', color: '#6c757d', fontWeight: 'bold' }}>Cari Tanggal:</label>
-                  <input 
-                    type="date" 
-                    value={searchDateWwtp} 
-                    onChange={(e) => setSearchDateWwtp(e.target.value)} 
-                    style={{ padding: '6px 12px', border: '1px solid #ccc', borderRadius: '4px', fontSize: '13px' }} 
+                  <input
+                    type="date"
+                    value={searchDateWwtp}
+                    onChange={(e) => setSearchDateWwtp(e.target.value)}
+                    style={{ padding: '6px 12px', border: '1px solid #ccc', borderRadius: '4px', fontSize: '13px' }}
                   />
                   {searchDateWwtp && (
-                    <button 
-                      onClick={() => setSearchDateWwtp('')} 
+                    <button
+                      onClick={() => setSearchDateWwtp('')}
                       style={{ padding: '6px 10px', backgroundColor: '#e9ecef', border: '1px solid #ccc', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}
                     >
                       Reset
@@ -721,7 +658,7 @@ export default function App() {
                   )}
                 </div>
               </div>
-              
+
               <div style={{ maxHeight: '280px', overflow: 'auto', border: '1px solid #dee2e6', borderRadius: '4px' }}>
                 <table style={{ width: '100%', minWidth: '760px', borderCollapse: 'collapse', fontSize: '14px' }}>
                   <thead>
@@ -769,7 +706,6 @@ export default function App() {
                 </table>
               </div>
             </div>
-
           </div>
         )}
 
