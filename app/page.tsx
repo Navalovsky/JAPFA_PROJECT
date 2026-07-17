@@ -10,12 +10,11 @@ import { LayoutDashboard, FilePenLine, CalendarDays, LogOut, Menu, X } from 'luc
 // ============================================
 const THRESHOLD = {
   wtp: {
-    debit_inlet: { min: , max: },   // m³/h — kapasitas pompa pasokan air baku
-    debit_outlet: { min: 0, max: 116 },  // m³/h — kapasitas pasokan air bersih ke produksi
+    // Debit Inlet tidak diberi batas — jumlahnya mengikuti kebutuhan produksi
+    debit_outlet: { max: 116 },  // m³/h — batas maksimum outlet WTP
   },
   wwtp: {
-    cod: { max: 100 },        // mg/L — tidak ada batas bawah spesifik
-    bod: { max: 30 },         // mg/L — baku mutu domestik
+    do: { min: 2 },           // mg/L — Dissolved Oxygen, warning jika di bawah batas ini
     ph: { min: 6.0, max: 9.0 },
     nh3_n: { max: 10 },       // mg/L — baku mutu domestik
     // debit_inlet & debit_outlet WWTP sengaja tidak diberi batas (tidak ada baku mutu universal)
@@ -99,8 +98,8 @@ export default function App() {
 
   // Input States
   const [activeForm, setActiveForm] = useState<'wtp' | 'wwtp'>('wtp');
-  const [wtpForm, setWtpForm] = useState({ debit_inlet: '', debit_outlet: '' });
-  const [wwtpForm, setWwtpForm] = useState({ cod: '', bod: '', debit_inlet: '', debit_outlet: '', nh3_n: '', ph: '' });
+  const [wtpForm, setWtpForm] = useState({ debit_inlet: '', debit_outlet: '', nutrisi: '', chemical: '' });
+  const [wwtpForm, setWwtpForm] = useState({ do: '', debit_inlet: '', debit_outlet: '', nh3_n: '', ph: '' });
 
   const chartWtpRef = useRef<HTMLCanvasElement | null>(null);
   const chartWwtpRef = useRef<HTMLCanvasElement | null>(null);
@@ -207,7 +206,7 @@ export default function App() {
     if (chartWwtpRef.current) {
       if (chartWwtpInstance.current) {
         chartWwtpInstance.current.data.labels = labelsWwtp;
-        chartWwtpInstance.current.data.datasets[0].data = jsonData.charts.wwtp.map((d: any) => d.cod);
+        chartWwtpInstance.current.data.datasets[0].data = jsonData.charts.wwtp.map((d: any) => d.do);
         chartWwtpInstance.current.data.datasets[1].data = jsonData.charts.wwtp.map((d: any) => d.ph);
         chartWwtpInstance.current.update('none');
       } else {
@@ -216,7 +215,7 @@ export default function App() {
           data: {
             labels: labelsWwtp,
             datasets: [
-              { label: 'COD (mg/L)', data: jsonData.charts.wwtp.map((d: any) => d.cod), borderColor: '#dc3545', tension: 0.2 },
+              { label: 'DO (mg/L)', data: jsonData.charts.wwtp.map((d: any) => d.do), borderColor: '#0d6efd', tension: 0.2 },
               { label: 'pH', data: jsonData.charts.wwtp.map((d: any) => d.ph), borderColor: '#ffc107', tension: 0.2 }
             ]
           },
@@ -277,8 +276,8 @@ export default function App() {
       });
       if (res.ok) {
         alert('Data Parameter Berhasil Disimpan!');
-        setWtpForm({ debit_inlet: '', debit_outlet: '' });
-        setWwtpForm({ cod: '', bod: '', debit_inlet: '', debit_outlet: '', nh3_n: '', ph: '' });
+        setWtpForm({ debit_inlet: '', debit_outlet: '', nutrisi: '', chemical: '' });
+        setWwtpForm({ do: '', debit_inlet: '', debit_outlet: '', nh3_n: '', ph: '' });
         fetchWeeklyData();
         setActiveMenu(activeForm === 'wtp' ? 'dashboard-wtp' : 'dashboard-wwtp');
       } else {
@@ -298,17 +297,15 @@ export default function App() {
     ? data.charts.wwtp[data.charts.wwtp.length - 1] 
     : data?.latest?.wwtp;
 
-  // LOGIKA CEK WARNING BATAS ATAS & BAWAH PARAMETER WTP
+  // LOGIKA CEK WARNING BATAS ATAS PARAMETER WTP (inlet tidak dibatasi, ikut kebutuhan produksi)
   const isWtpWarning = latestWtp 
-    ? Number(latestWtp.debit_inlet) < THRESHOLD.wtp.debit_inlet.min || Number(latestWtp.debit_inlet) > THRESHOLD.wtp.debit_inlet.max ||
-      Number(latestWtp.debit_outlet) < THRESHOLD.wtp.debit_outlet.min || Number(latestWtp.debit_outlet) > THRESHOLD.wtp.debit_outlet.max
+    ? Number(latestWtp.debit_outlet) > THRESHOLD.wtp.debit_outlet.max
     : false;
 
   // LOGIKA CEK WARNING BATAS ATAS & BAWAH PARAMETER WWTP
   const isWwtpWarning = latestWwtp 
     ? Number(latestWwtp.ph) < THRESHOLD.wwtp.ph.min || Number(latestWwtp.ph) > THRESHOLD.wwtp.ph.max ||
-      Number(latestWwtp.cod) > THRESHOLD.wwtp.cod.max ||
-      Number(latestWwtp.bod) > THRESHOLD.wwtp.bod.max ||
+      Number(latestWwtp.do) < THRESHOLD.wwtp.do.min ||
       Number(latestWwtp.nh3_n) > THRESHOLD.wwtp.nh3_n.max
     : false;
 
@@ -526,8 +523,10 @@ export default function App() {
             <div style={{ marginBottom: '24px' }}>
               <div style={{ backgroundColor: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
                 <h3 style={{ margin: '0 0 12px 0', color: '#000000' }}>WTP Status</h3>
-                <p>Debit Inlet: <strong style={{ color: (Number(latestWtp?.debit_inlet) < THRESHOLD.wtp.debit_inlet.min || Number(latestWtp?.debit_inlet) > THRESHOLD.wtp.debit_inlet.max) ? 'red' : 'inherit' }}>{latestWtp?.debit_inlet || 0}</strong> m³/h</p>
-                <p>Debit Outlet: <strong style={{ color: (Number(latestWtp?.debit_outlet) < THRESHOLD.wtp.debit_outlet.min || Number(latestWtp?.debit_outlet) > THRESHOLD.wtp.debit_outlet.max) ? 'red' : 'inherit' }}>{latestWtp?.debit_outlet || 0}</strong> m³/h</p>
+                <p>Debit Inlet: <strong>{latestWtp?.debit_inlet || 0}</strong> m³/h</p>
+                <p>Debit Outlet: <strong style={{ color: Number(latestWtp?.debit_outlet) > THRESHOLD.wtp.debit_outlet.max ? 'red' : 'inherit' }}>{latestWtp?.debit_outlet || 0}</strong> m³/h</p>
+                <p>Pemberian Nutrisi: <strong>{latestWtp?.nutrisi || 0}</strong> mg/L</p>
+                <p>Pemberian Chemical: <strong>{latestWtp?.chemical || 0}</strong> mg/L</p>
                 <span style={{ display: 'inline-block', backgroundColor: isWtpWarning ? '#dc3545' : '#25c281', color: '#fff', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold' }}>
                   {isWtpWarning ? 'WARNING: Parameter WTP Tidak Normal!' : 'Normal'}
                 </span>
@@ -565,35 +564,38 @@ export default function App() {
               </div>
 
               <div style={{ maxHeight: '280px', overflow: 'auto', border: '1px solid #dee2e6', borderRadius: '4px' }}>
-                <table style={{ width: '100%', minWidth: '480px', borderCollapse: 'collapse', fontSize: '14px' }}>
+                <table style={{ width: '100%', minWidth: '680px', borderCollapse: 'collapse', fontSize: '14px' }}>
                   <thead>
                     <tr style={{ textAlign: 'left' }}>
                       <th style={{ padding: '12px', whiteSpace: 'nowrap', position: 'sticky', top: 0, backgroundColor: '#f8f9fa', borderBottom: '2px solid #dee2e6', zIndex: 1 }}>Waktu Log</th>
                       <th style={{ padding: '12px', whiteSpace: 'nowrap', position: 'sticky', top: 0, backgroundColor: '#f8f9fa', borderBottom: '2px solid #dee2e6', zIndex: 1 }}>Debit Inlet (m³/h)</th>
                       <th style={{ padding: '12px', whiteSpace: 'nowrap', position: 'sticky', top: 0, backgroundColor: '#f8f9fa', borderBottom: '2px solid #dee2e6', zIndex: 1 }}>Debit Outlet (m³/h)</th>
+                      <th style={{ padding: '12px', whiteSpace: 'nowrap', position: 'sticky', top: 0, backgroundColor: '#f8f9fa', borderBottom: '2px solid #dee2e6', zIndex: 1 }}>Nutrisi (mg/L)</th>
+                      <th style={{ padding: '12px', whiteSpace: 'nowrap', position: 'sticky', top: 0, backgroundColor: '#f8f9fa', borderBottom: '2px solid #dee2e6', zIndex: 1 }}>Chemical (mg/L)</th>
                       <th style={{ padding: '12px', whiteSpace: 'nowrap', position: 'sticky', top: 0, backgroundColor: '#f8f9fa', borderBottom: '2px solid #dee2e6', zIndex: 1 }}>Diupload Oleh</th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredWtp.length > 0 ? (
                       filteredWtp.map((item: any) => {
-                        const isWtpInletAlert = Number(item.debit_inlet) < THRESHOLD.wtp.debit_inlet.min || Number(item.debit_inlet) > THRESHOLD.wtp.debit_inlet.max;
-                        const isWtpOutletAlert = Number(item.debit_outlet) < THRESHOLD.wtp.debit_outlet.min || Number(item.debit_outlet) > THRESHOLD.wtp.debit_outlet.max;
+                        const isWtpOutletAlert = Number(item.debit_outlet) > THRESHOLD.wtp.debit_outlet.max;
                         return (
                           <tr key={item.id} style={{ borderBottom: '1px solid #dee2e6' }}>
                             <td style={{ padding: '12px', whiteSpace: 'nowrap' }}>
                               {new Date(item.created_at).toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' })} -{' '}
                               {new Date(item.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
                             </td>
-                            <td style={{ padding: '12px', whiteSpace: 'nowrap', color: isWtpInletAlert ? 'red' : 'inherit', fontWeight: isWtpInletAlert ? 'bold' : 'normal' }}>{item.debit_inlet}</td>
+                            <td style={{ padding: '12px', whiteSpace: 'nowrap' }}>{item.debit_inlet}</td>
                             <td style={{ padding: '12px', whiteSpace: 'nowrap', color: isWtpOutletAlert ? 'red' : 'inherit', fontWeight: isWtpOutletAlert ? 'bold' : 'normal' }}>{item.debit_outlet}</td>
+                            <td style={{ padding: '12px', whiteSpace: 'nowrap' }}>{item.nutrisi ?? '-'}</td>
+                            <td style={{ padding: '12px', whiteSpace: 'nowrap' }}>{item.chemical ?? '-'}</td>
                             <td style={{ padding: '12px', whiteSpace: 'nowrap', color: '#6c757d' }}>{item.uploaded_by || '-'}</td>
                           </tr>
                         );
                       })
                     ) : (
                       <tr>
-                        <td colSpan={4} style={{ padding: '20px', textAlign: 'center', color: '#888' }}>Data tidak ditemukan pada tanggal tersebut.</td>
+                        <td colSpan={6} style={{ padding: '20px', textAlign: 'center', color: '#888' }}>Data tidak ditemukan pada tanggal tersebut.</td>
                       </tr>
                     )}
                   </tbody>
@@ -613,8 +615,7 @@ export default function App() {
                 <h3 style={{ margin: '0 0 12px 0', color: '#212529' }}>WWTP Status</h3>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', marginBottom: '10px' }}>
                   <div style={{ flex: '1 1 120px' }}>
-                    <p>COD: <strong style={{ color: Number(latestWwtp?.cod) > THRESHOLD.wwtp.cod.max ? 'red' : 'inherit' }}>{latestWwtp?.cod || 0}</strong> mg/L</p>
-                    <p>BOD: <strong style={{ color: Number(latestWwtp?.bod) > THRESHOLD.wwtp.bod.max ? 'red' : 'inherit' }}>{latestWwtp?.bod || 0}</strong> mg/L</p>
+                    <p>DO: <strong style={{ color: Number(latestWwtp?.do) < THRESHOLD.wwtp.do.min ? 'red' : 'inherit' }}>{latestWwtp?.do || 0}</strong> mg/L</p>
                     <p>pH: <strong style={{ color: (Number(latestWwtp?.ph) < THRESHOLD.wwtp.ph.min || Number(latestWwtp?.ph) > THRESHOLD.wwtp.ph.max) ? 'red' : 'inherit' }}>{latestWwtp?.ph || 0}</strong></p>
                   </div>
                   <div style={{ flex: '1 1 120px' }}>
@@ -664,8 +665,7 @@ export default function App() {
                   <thead>
                     <tr style={{ textAlign: 'left' }}>
                       <th style={{ padding: '12px', whiteSpace: 'nowrap', position: 'sticky', top: 0, backgroundColor: '#f8f9fa', borderBottom: '2px solid #dee2e6', zIndex: 1 }}>Waktu Log</th>
-                      <th style={{ padding: '12px', whiteSpace: 'nowrap', position: 'sticky', top: 0, backgroundColor: '#f8f9fa', borderBottom: '2px solid #dee2e6', zIndex: 1 }}>COD</th>
-                      <th style={{ padding: '12px', whiteSpace: 'nowrap', position: 'sticky', top: 0, backgroundColor: '#f8f9fa', borderBottom: '2px solid #dee2e6', zIndex: 1 }}>BOD</th>
+                      <th style={{ padding: '12px', whiteSpace: 'nowrap', position: 'sticky', top: 0, backgroundColor: '#f8f9fa', borderBottom: '2px solid #dee2e6', zIndex: 1 }}>DO</th>
                       <th style={{ padding: '12px', whiteSpace: 'nowrap', position: 'sticky', top: 0, backgroundColor: '#f8f9fa', borderBottom: '2px solid #dee2e6', zIndex: 1 }}>Inlet</th>
                       <th style={{ padding: '12px', whiteSpace: 'nowrap', position: 'sticky', top: 0, backgroundColor: '#f8f9fa', borderBottom: '2px solid #dee2e6', zIndex: 1 }}>Outlet</th>
                       <th style={{ padding: '12px', whiteSpace: 'nowrap', position: 'sticky', top: 0, backgroundColor: '#f8f9fa', borderBottom: '2px solid #dee2e6', zIndex: 1 }}>NH3-N</th>
@@ -676,8 +676,7 @@ export default function App() {
                   <tbody>
                     {filteredWwtp.length > 0 ? (
                       filteredWwtp.map((item: any) => {
-                        const isCodAlert = Number(item.cod) > THRESHOLD.wwtp.cod.max;
-                        const isBodAlert = Number(item.bod) > THRESHOLD.wwtp.bod.max;
+                        const isDoAlert = Number(item.do) < THRESHOLD.wwtp.do.min;
                         const isNh3Alert = Number(item.nh3_n) > THRESHOLD.wwtp.nh3_n.max;
                         const isPhAlert = Number(item.ph) < THRESHOLD.wwtp.ph.min || Number(item.ph) > THRESHOLD.wwtp.ph.max;
 
@@ -687,8 +686,7 @@ export default function App() {
                             {new Date(item.created_at).toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' })} -{' '}
                             {new Date(item.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
                           </td>
-                            <td style={{ padding: '12px', whiteSpace: 'nowrap', color: isCodAlert ? 'red' : 'inherit', fontWeight: isCodAlert ? 'bold' : 'normal' }}>{item.cod}</td>
-                            <td style={{ padding: '12px', whiteSpace: 'nowrap', color: isBodAlert ? 'red' : 'inherit', fontWeight: isBodAlert ? 'bold' : 'normal' }}>{item.bod}</td>
+                            <td style={{ padding: '12px', whiteSpace: 'nowrap', color: isDoAlert ? 'red' : 'inherit', fontWeight: isDoAlert ? 'bold' : 'normal' }}>{item.do}</td>
                             <td style={{ padding: '12px', whiteSpace: 'nowrap' }}>{item.debit_inlet}</td>
                             <td style={{ padding: '12px', whiteSpace: 'nowrap' }}>{item.debit_outlet}</td>
                             <td style={{ padding: '12px', whiteSpace: 'nowrap', color: isNh3Alert ? 'red' : 'inherit', fontWeight: isNh3Alert ? 'bold' : 'normal' }}>{item.nh3_n}</td>
@@ -699,7 +697,7 @@ export default function App() {
                       })
                     ) : (
                       <tr>
-                        <td colSpan={8} style={{ padding: '20px', textAlign: 'center', color: '#888' }}>Data tidak ditemukan pada tanggal tersebut.</td>
+                        <td colSpan={7} style={{ padding: '20px', textAlign: 'center', color: '#888' }}>Data tidak ditemukan pada tanggal tersebut.</td>
                       </tr>
                     )}
                   </tbody>
@@ -715,7 +713,7 @@ export default function App() {
             <h2 style={{ margin: '0 0 6px 0' }}>Form Input Parameter Utility</h2>
             <div style={{ marginBottom: '20px', marginTop: '16px' }}>
               <button onClick={() => setActiveForm('wtp')} style={{ padding: '10px 20px', marginRight: '10px', backgroundColor: activeForm === 'wtp' ? '#0dcaf0' : '#e9ecef', color: activeForm === 'wtp' ? '#fff' : '#333', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>Opsi WTP</button>
-              <button onClick={() => setActiveForm('wwtp')} style={{ padding: '10px 20px', backgroundColor: activeForm === 'wwtp' ? '#0dcaf0' : '#e9ecef', color: activeForm === 'wwtp' ? '#fff' : '#333', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>Opsi WWTP</button>
+              <button onClick={() => setActiveForm('wwtp')} style={{ padding: '10px 20px', backgroundColor: activeForm === 'wwtp' ? '#212529' : '#e9ecef', color: activeForm === 'wwtp' ? '#fff' : '#333', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>Opsi WWTP</button>
             </div>
             <form onSubmit={handleInputSubmit}>
               {activeForm === 'wtp' ? (
@@ -728,16 +726,20 @@ export default function App() {
                     <label style={{ display: 'block', marginBottom: '6px' }}>Debit Outlet (m³/h)</label>
                     <input type="number" step="0.01" value={wtpForm.debit_outlet} onChange={(e) => setWtpForm({...wtpForm, debit_outlet: e.target.value})} required style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }} />
                   </div>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '6px' }}>Pemberian Nutrisi (mg/L)</label>
+                    <input type="number" step="0.01" value={wtpForm.nutrisi} onChange={(e) => setWtpForm({...wtpForm, nutrisi: e.target.value})} required style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }} />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '6px' }}>Pemberian Chemical (mg/L)</label>
+                    <input type="number" step="0.01" value={wtpForm.chemical} onChange={(e) => setWtpForm({...wtpForm, chemical: e.target.value})} required style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }} />
+                  </div>
                 </div>
               ) : (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px', marginBottom: '20px' }}>
                   <div>
-                    <label style={{ display: 'block', marginBottom: '6px' }}>COD (mg/L)</label>
-                    <input type="number" step="0.01" value={wwtpForm.cod} onChange={(e) => setWwtpForm({...wwtpForm, cod: e.target.value})} required style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }} />
-                  </div>
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '6px' }}>BOD (mg/L)</label>
-                    <input type="number" step="0.01" value={wwtpForm.bod} onChange={(e) => setWwtpForm({...wwtpForm, bod: e.target.value})} required style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }} />
+                    <label style={{ display: 'block', marginBottom: '6px' }}>DO (mg/L)</label>
+                    <input type="number" step="0.01" value={wwtpForm.do} onChange={(e) => setWwtpForm({...wwtpForm, do: e.target.value})} required style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }} />
                   </div>
                   <div>
                     <label style={{ display: 'block', marginBottom: '6px' }}>Debit Inlet (m³/h)</label>
@@ -755,6 +757,8 @@ export default function App() {
                     <label style={{ display: 'block', marginBottom: '6px' }}>pH</label>
                     <input type="number" step="0.01" value={wwtpForm.ph} onChange={(e) => setWwtpForm({...wwtpForm, ph: e.target.value})} required style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }} />
                   </div>
+                </div>
+              
                 </div>
               )}
               <button type="submit" style={{ padding: '12px 24px', backgroundColor: '#0d6efd', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>KIRIM DATA LOG</button>
