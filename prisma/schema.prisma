@@ -11,14 +11,15 @@ model wtp_logs {
   id           Int      @id @default(autoincrement())
   debit_inlet  Float
   debit_outlet Float
+  nutrisi      Float?
+  chemical     Float?
   uploaded_by  String?
   created_at   DateTime @default(now())
 }
 
 model wwtp_logs {
   id           Int      @id @default(autoincrement())
-  cod          Float
-  bod          Float
+  do           Float
   debit_inlet  Float
   debit_outlet Float
   nh3_n        Float
