@@ -13,6 +13,8 @@ export async function POST(request: Request) {
         data: {
           debit_inlet: parseFloat(data.debit_inlet),
           debit_outlet: parseFloat(data.debit_outlet),
+          nutrisi: parseFloat(data.nutrisi),
+          chemical: parseFloat(data.chemical),
           uploaded_by: uploaded_by || null,
         }
       });
@@ -20,8 +22,7 @@ export async function POST(request: Request) {
     } else if (type === 'wwtp') {
       const newWwtp = await prisma.wwtp_logs.create({
         data: {
-          cod: parseFloat(data.cod),
-          bod: parseFloat(data.bod),
+          do: parseFloat(data.do),
           debit_inlet: parseFloat(data.debit_inlet),
           debit_outlet: parseFloat(data.debit_outlet),
           nh3_n: parseFloat(data.nh3_n),
