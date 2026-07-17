@@ -758,8 +758,6 @@ export default function App() {
                     <input type="number" step="0.01" value={wwtpForm.ph} onChange={(e) => setWwtpForm({...wwtpForm, ph: e.target.value})} required style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }} />
                   </div>
                 </div>
-              
-                </div>
               )}
               <button type="submit" style={{ padding: '12px 24px', backgroundColor: '#0d6efd', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>KIRIM DATA LOG</button>
             </form>
