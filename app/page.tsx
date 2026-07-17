@@ -10,8 +10,8 @@ import { LayoutDashboard, FilePenLine, CalendarDays, LogOut, Menu, X } from 'luc
 // ============================================
 const THRESHOLD = {
   wtp: {
-    debit_inlet: { min: 50, max: 180 },   // m³/h — kapasitas pompa pasokan air baku
-    debit_outlet: { min: 45, max: 150 },  // m³/h — kapasitas pasokan air bersih ke produksi
+    debit_inlet: { min: , max: },   // m³/h — kapasitas pompa pasokan air baku
+    debit_outlet: { min: 0, max: 116 },  // m³/h — kapasitas pasokan air bersih ke produksi
   },
   wwtp: {
     cod: { max: 100 },        // mg/L — tidak ada batas bawah spesifik
